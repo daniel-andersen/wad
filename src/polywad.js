@@ -236,7 +236,7 @@ class Polywad {
 
 		if ( ac !== -1 && ac !== 11025 && ac !== 12000 ) {
 			let pitch = ac;
-			this.pitch = Math.floor( pitch ) ;
+			this.pitch = pitch;
 			let note = noteFromPitch( pitch );
 			this.noteName = pitchesArray[note - 12];
 			// Detune doesn't seem to work.

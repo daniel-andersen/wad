@@ -18624,7 +18624,7 @@ return /******/ (function(modules) { // webpackBootstrap
             writable: true,
             value: {
                 drive: {
-                    value: 1,
+                    value: 0.197,
                     min: 0,
                     max: 1,
                     automatable: true,
@@ -18632,7 +18632,7 @@ return /******/ (function(modules) { // webpackBootstrap
                     scaled: true
                 },
                 outputGain: {
-                    value: 0,
+                    value: -9.154,
                     min: -46,
                     max: 0,
                     automatable: true,
@@ -18640,7 +18640,7 @@ return /******/ (function(modules) { // webpackBootstrap
                     scaled: true
                 },
                 curveAmount: {
-                    value: 0.725,
+                    value: 0.979,
                     min: 0,
                     max: 1,
                     automatable: false,
@@ -18668,7 +18668,7 @@ return /******/ (function(modules) { // webpackBootstrap
                 return this.inputDrive.gain;
             },
             set: function(value) {
-                this._drive = value;
+                this.inputDrive.gain.value = value;
             }
         },
         curveAmount: {
@@ -18717,7 +18717,7 @@ return /******/ (function(modules) { // webpackBootstrap
                     var i, x, y;
                     for (i = 0; i < n_samples; i++) {
                         x = i * 2 / n_samples - 1;
-                        y = ((0.5 * Math.pow((x + 1.4), 2)) - 1) * y >= 0 ? 5.8 : 1.2;
+                        y = ((0.5 * Math.pow((x + 1.4), 2)) - 1) * (y >= 0 ? 5.8 : 1.2);
                         ws_table[i] = tanh(y);
                     }
                 },
@@ -18734,9 +18734,13 @@ return /******/ (function(modules) { // webpackBootstrap
                     for (i = 0; i < n_samples; i++) {
                         x = i * 2 / n_samples - 1;
                         abx = Math.abs(x);
-                        if (abx < a) y = abx;
-                        else if (abx > a) y = a + (abx - a) / (1 + Math.pow((abx - a) / (1 - a), 2));
-                        else if (abx > 1) y = abx;
+                        if (abx < a) {
+                            y = abx;
+                        } else if (abx > a) {
+                            y = a + (abx - a) / (1 + Math.pow((abx - a) / (1 - a), 2));
+                        } else if (abx > 1) {
+                            y = abx;
+                        }
                         ws_table[i] = sign(x) * y * (1 / ((a + 1) / 2));
                     }
                 },
@@ -19259,35 +19263,35 @@ return /******/ (function(modules) { // webpackBootstrap
                     type: BOOLEAN
                 },
                 baseFrequency: {
-                    value: 0.5,
+                    value: 0.153,
                     min: 0,
                     max: 1,
                     automatable: false,
                     type: FLOAT
                 },
                 excursionOctaves: {
-                    value: 2,
+                    value: 3.3,
                     min: 1,
                     max: 6,
                     automatable: false,
                     type: FLOAT
                 },
                 sweep: {
-                    value: 0.2,
+                    value: 0.35,
                     min: 0,
                     max: 1,
                     automatable: false,
                     type: FLOAT
                 },
                 resonance: {
-                    value: 10,
+                    value: 19,
                     min: 1,
                     max: 100,
                     automatable: false,
                     type: FLOAT
                 },
                 sensitivity: {
-                    value: 0.5,
+                    value: -0.5,
                     min: -1,
                     max: 1,
                     automatable: false,
@@ -19520,20 +19524,14 @@ return /******/ (function(modules) { // webpackBootstrap
                     channels = event.inputBuffer.numberOfChannels,
                     current, chan, rms, i;
                 chan = rms = i = 0;
-                if (channels > 1) { //need to mixdown
+
+                for(chan = 0; chan < channels; ++chan) {
                     for (i = 0; i < count; ++i) {
-                        for (; chan < channels; ++chan) {
-                            current = event.inputBuffer.getChannelData(chan)[i];
-                            rms += (current * current) / channels;
-                        }
-                    }
-                } else {
-                    for (i = 0; i < count; ++i) {
-                        current = event.inputBuffer.getChannelData(0)[i];
+                        current = event.inputBuffer.getChannelData(chan)[i];
                         rms += (current * current);
                     }
                 }
-                rms = Math.sqrt(rms);
+                rms = Math.sqrt(rms / channels);
 
                 if (this._envelope < rms) {
                     this._envelope *= this._attackC;
@@ -19976,7 +19974,10 @@ let getUserMedia = (function(window) {
 	}
     
 	return function() {
-		throw 'getUserMedia is unsupported';
+		if ( window.location.hostname !== 'localhost' && window.location.protocol === 'http:' ) {
+			throw "The user's microphone can only be accessed via HTTPS or localhost. This page seems to be running on plain HTTP."
+		}
+		throw 'getUserMedia is unsupported. ';
 	};
 }(window));
     
@@ -20358,7 +20359,6 @@ let setUpFilterOnPlay = function(that, arg){
 		createFilters(that, that);
 	}
 };
-///////////////////////////////////////////////////////////////////////////////////////////////
 
 /** Initialize and configure a convolver node for playback **/
 let setUpReverbOnPlay = function(that, arg){
@@ -20380,7 +20380,6 @@ let setUpReverbOnPlay = function(that, arg){
 	that.reverb.node = reverbNode;
 	that.nodes.push(that.reverb.node);
 };
-//////////////////////////////////////////////////////////////
 
 
 /** Initialize and configure a panner node for playback **/
@@ -21182,7 +21181,7 @@ class Polywad {
 
 		if ( ac !== -1 && ac !== 11025 && ac !== 12000 ) {
 			let pitch = ac;
-			this.pitch = Math.floor( pitch ) ;
+			this.pitch = pitch;
 			let note = noteFromPitch( pitch );
 			this.noteName = _pitches__WEBPACK_IMPORTED_MODULE_1__["pitchesArray"][note - 12];
 			// Detune doesn't seem to work.
@@ -21311,11 +21310,6 @@ class Polywad {
 
 	constructExternalFx(arg, context){ }
 }
-
-
-
-
-
 
 
 /* harmony default export */ __webpack_exports__["default"] = (Polywad);
